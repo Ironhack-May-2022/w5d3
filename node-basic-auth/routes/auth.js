@@ -50,5 +50,33 @@ router.post('/signup', (req, res, next) => {
 		})
 });
 
+router.post('/login', (req, res, next) => {
+	const { username, password } = req.body
+	// do we have a user with that username in the db
+	User.findOne({ username: username })
+		.then(userFromDB => {
+			if (userFromDB === null) {
+				// username is not correct -> show login form again
+				res.render('login', { message: 'Invalid credentials' })
+				return
+			}
+			// username is correct
+			// check the password from the form against the hash in the db
+			if (bcrypt.compareSync(password, userFromDB.password)) {
+				// the password is correct -> the user can be logged in
+				// req.session is an obj that is provided by express-session
+				req.session.user = userFromDB
+				res.redirect('/profile')
+			}
+		})
+});
+
+router.get('/logout', (req, res, next) => {
+	// this logs the user out by deleting the session
+	// this method is provided by express-session
+	req.session.destroy()
+	res.redirect('/')
+});
+
 
 module.exports = router;
